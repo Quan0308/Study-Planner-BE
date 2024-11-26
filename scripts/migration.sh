@@ -1,0 +1,1 @@
+eval "SERVICE=$1 pnpm migrate"

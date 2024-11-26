@@ -1,0 +1,17 @@
+services:
+  main-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_NAME: main-api
+        STAGE: dev
+    ports:
+      - "3000:3000"
+    container_name: main-api
+    networks:
+      - ll-network
+
+networks:
+  ll-network:
+    driver: bridge
