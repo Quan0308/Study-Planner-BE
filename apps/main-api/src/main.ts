@@ -12,7 +12,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformResponseInterceptor(new Reflector()));
   app.useGlobalInterceptors(new ExceptionHandlerInterceptor());
   app.useGlobalPipes(ThrowFirstErrorValidationPipe);
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 80;
   await app.listen(port);
   Logger.log(`🚀 Main application is running on: http://localhost:${port}/${globalPrefix}`);
 }

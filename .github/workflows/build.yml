@@ -1,0 +1,92 @@
+name: CI and Deploy
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    # Set environment dynamically based on branch
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+
+    steps:
+      # Step 1: Checkout repository
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Step 2: Set up Node.js and install dependencies
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - run: npm install -g pnpm
+      - run: pnpm install
+
+      # Step 3: Build and test the project
+      - run: pnpm run build
+      - run: pnpm run test
+
+      # Step 4: Deploy to EC2
+      - name: Deploy to EC2
+        env:
+          EC2_USER: ubuntu # Adjust if your EC2 uses a different user
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_KEY: ${{ secrets.EC2_SSH_KEY }}
+          MONGO_DB_URI: ${{ secrets.MONGO_DB_URI }}
+          NODE_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+        run: |
+          # Save the SSH private key
+          mkdir -p ~/.ssh
+          echo "$EC2_KEY" > ~/.ssh/ec2-key.pem
+          chmod 600 ~/.ssh/ec2-key.pem
+
+          # Add the EC2 host to known hosts
+          ssh-keyscan -v -H $EC2_HOST >> ~/.ssh/known_hosts
+
+          # Transfer files to the EC2 server
+          echo "Transferring build files to EC2..."
+          scp -i ~/.ssh/ec2-key.pem -r ./dist $EC2_USER@$EC2_HOST:/var/www/study-planner-api
+
+          # Connect via SSH and execute commands
+          ssh -i ~/.ssh/ec2-key.pem $EC2_USER@$EC2_HOST << "EOF"
+            export PATH=$PATH:/home/ubuntu/.local/share/pnpm:/home/ubuntu/.nvm/versions/node/v20/bin:/usr/local/bin
+            if [ -f ~/.bashrc ]; then
+              source ~/.bashrc
+            fi
+
+            # Set up application directory
+            sudo mkdir -p /var/www/study-planner-api
+            sudo chown -R ubuntu:ubuntu /var/www/study-planner-api
+            cd /var/www/study-planner-api
+
+            # Create environment variables
+            echo "Setting up environment variables..."
+            echo "MONGO_DB_URI=$MONGO_DB_URI\nNODE_ENV=$NODE_ENV\nPORT=80" > .env
+
+            # Install PM2 if not already installed
+            if ! command -v pm2 &> /dev/null; then
+              echo "Installing PM2..."
+              npm install -g pm2
+            fi
+
+            # Restart or start the app using PM2
+            if pm2 list | grep -q "study-planner-api"; then
+              echo "Restarting application..."
+              pm2 restart study-planner-api
+            else
+              echo "Starting application..."
+              pm2 start dist/apps/main-api/main.js --name study-planner-api --env $NODE_ENV
+              pm2 save
+            fi
+
+            echo "Deployment complete!"
+          EOF

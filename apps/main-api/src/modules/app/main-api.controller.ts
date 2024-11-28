@@ -1,5 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
-import { MainApiService } from './main-api.service';
+import { Controller, Get } from "@nestjs/common";
+import { MainApiService } from "./main-api.service";
 
 @Controller()
 export class MainApiController {

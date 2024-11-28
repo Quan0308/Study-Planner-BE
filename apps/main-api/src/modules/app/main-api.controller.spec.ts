@@ -1,8 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { MainApiController } from './main-api.controller';
-import { MainApiService } from './main-api.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { MainApiController } from "./main-api.controller";
+import { MainApiService } from "./main-api.service";
 
-describe('MainApiController', () => {
+describe("MainApiController", () => {
   let mainApiController: MainApiController;
 
   beforeEach(async () => {
@@ -14,9 +14,9 @@ describe('MainApiController', () => {
     mainApiController = app.get<MainApiController>(MainApiController);
   });
 
-  describe('root', () => {
+  describe("root", () => {
     it('should return "Hello World!"', () => {
-      expect(mainApiController.getHello()).toBe('Hello World!');
+      expect(mainApiController.getHello()).toBe("Hello World!");
     });
   });
 });
