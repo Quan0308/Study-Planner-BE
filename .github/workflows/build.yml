@@ -37,11 +37,13 @@ jobs:
 
       # Step 3: Build Docker image with arguments for SERVICE_NAME and STAGE
       - name: Build Docker image
+        env:
+          TAG: ${{ vars.TAG }}
         run: |
           docker build --file docker/Dockerfile \
             --build-arg SERVICE_NAME=main-api \
-            --build-arg STAGE=${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} \
-            -t duyquan0308/study-planner-api .
+            --build-arg STAGE=$TAG \
+            -t duyquan0308/study-planner-api:$TAG .
 
       # Step 4: Log in to Docker Hub or Amazon ECR (Use secrets for credentials)
       - name: Log in to Docker Hub
@@ -52,8 +54,10 @@ jobs:
 
       # Step 5: Push Docker image to Docker Hub
       - name: Push Docker image to Docker Hub
+        env:
+          TAG: ${{ vars.TAG }}
         run: |
-          docker push duyquan0308/study-planner-api
+          docker push duyquan0308/study-planner-api:$TAG
 
       # Step 6: SSH to EC2 and run the Docker container
       - name: Deploy to EC2 via SSH
@@ -62,6 +66,8 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_KEY: ${{ secrets.EC2_SSH_KEY }}
           NODE_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+          MONGO_DB_URI: ${{ secrets.MONGO_DB_URI }}
+          TAG: ${{ vars.TAG }}
         run: |
           # Save the SSH private key
           mkdir -p ~/.ssh
@@ -85,8 +91,8 @@ jobs:
             fi
 
             # Pull the latest Docker image
-            echo "Pulling Docker image from Docker Hub... ${GITHUB_SHA}"
-            docker pull duyquan0308/study-planner-api
+            echo "Pulling Docker image from Docker Hub..."
+            docker pull duyquan0308/study-planner-api:$TAG
 
             # Stop and remove any existing container
             docker ps -a -q --filter "name=study-planner-api" | xargs -r docker stop | xargs -r docker rm
@@ -96,7 +102,7 @@ jobs:
             docker run -d -p 8000:8000 --name study-planner-api \
               -e MONGO_DB_URI=${MONGO_DB_URI} \
               -e NODE_ENV=${NODE_ENV} \
-              duyquan0308/study-planner-api
+              duyquan0308/study-planner-api:$TAG
 
             echo "Deployment complete!"
           EOF
