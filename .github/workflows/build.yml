@@ -80,7 +80,7 @@ jobs:
           # Connect via SSH to deploy
           ssh -i ~/.ssh/ec2-key.pem $EC2_USER@$EC2_HOST << "EOF"
             # Pass environment variables to the remote server
-            TAG=$TAG
+            export TAG=$TAG
             #debug tag
             echo "TAG: $TAG"
 
