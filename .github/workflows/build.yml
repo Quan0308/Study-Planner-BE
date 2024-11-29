@@ -68,6 +68,7 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_KEY: ${{ secrets.EC2_SSH_KEY }}
           TAG: ${{ vars.TAG }}
+          PORT: ${{ vars.PORT }}
         run: |
           echo "PASSED TAG: $TAG"
           # Save the SSH private key
@@ -82,7 +83,9 @@ jobs:
           ssh -i ~/.ssh/ec2-key.pem $EC2_USER@$EC2_HOST \
             "set -e && \
             export TAG=${TAG} && \
+            export PORT=${PORT} && \
             echo 'TAG: \$TAG' && \
+            echo 'PORT: \$PORT' && \
             
             # Check if Docker is installed
             if ! command -v docker &> /dev/null; then
@@ -100,11 +103,11 @@ jobs:
             docker pull duyquan0308/study-planner-api:\$TAG && \
 
             # Stop and remove any existing container
-            docker ps -a --filter 'ancestor=duyquan0308/study-planner-api:\$TAG' -q | xargs -r docker stop | xargs -r docker rm && \
+            docker ps -a --filter 'name=study-planner-api-\$TAG' -q | xargs -r docker stop | xargs -r docker rm && \
 
             # Run the Docker container
-            echo 'Starting Docker container...' && \
-            docker run -d --name study-planner-api-\$TAG \
+            echo 'Starting Docker container on port $PORT' && \
+            docker run -d -p $PORT:8000 --name study-planner-api-\$TAG \
               duyquan0308/study-planner-api:\$TAG && \
 
             echo 'Deployment complete!'"

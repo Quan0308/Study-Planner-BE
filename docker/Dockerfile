@@ -4,6 +4,8 @@ ARG PRIVATE_TOKEN
 ARG SERVICE_NAME
 ARG STAGE
 RUN echo "PRIVATE_TOKEN: ${PRIVATE_TOKEN}"
+RUN echo "SERVICE_NAME: ${SERVICE_NAME}"
+RUN echo "STAGE: ${STAGE}"
 RUN apk --no-cache add curl
 RUN curl -H "Authorization: token $PRIVATE_TOKEN" -o .env https://raw.githubusercontent.com/Quan0308/Study-planner-env/main/${STAGE}/.env
 
@@ -44,8 +46,4 @@ RUN echo "building service: ${SERVICE_NAME} with stage: ${STAGE}"
 
 EXPOSE 8000
 
-RUN echo "#!/bin/sh" > /usr/local/bin/entrypoint.sh && \
-  echo "ENV=${STAGE} node /src/dist/apps/${SERVICE_NAME}/main.js" >> /usr/local/bin/entrypoint.sh && \
-  chmod +x /usr/local/bin/entrypoint.sh
-
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD [ "node", "dist/apps/main-api/main.js" ]
