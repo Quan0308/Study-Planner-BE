@@ -9,4 +9,9 @@ export class MainApiController {
   getHello(): string {
     return this.mainApiService.getHello();
   }
+
+  @Get("health")
+  getHealth(): string {
+    return "OK";
+  }
 }
