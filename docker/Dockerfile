@@ -36,7 +36,7 @@ COPY ./libs /src/libs
 
 RUN echo "building service: ${SERVICE_NAME} with stage: ${STAGE}"
 
-EXPOSE 3000
+EXPOSE 8000
 
 RUN echo "#!/bin/sh" > /usr/local/bin/entrypoint.sh && \
   echo "ENV=${STAGE} node /src/dist/apps/${SERVICE_NAME}/main.js" >> /usr/local/bin/entrypoint.sh && \

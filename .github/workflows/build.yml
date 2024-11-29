@@ -23,25 +23,44 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Step 2: Set up Node.js and install dependencies
-      - uses: actions/setup-node@v3
+      # Step 2: Set up Docker
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Set up Docker Buildx cache
+        uses: actions/cache@v3
         with:
-          node-version: 20
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
-      - run: npm install -g pnpm
-      - run: pnpm install
+      # Step 3: Build Docker image with arguments for SERVICE_NAME and STAGE
+      - name: Build Docker image
+        run: |
+          docker build --file docker/Dockerfile \
+            --build-arg SERVICE_NAME=main-api \
+            --build-arg STAGE=${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} \
+            -t duyquan0308/study-planner-api .
 
-      # Step 3: Build and test the project
-      - run: pnpm run build
-      - run: pnpm run test
+      # Step 4: Log in to Docker Hub or Amazon ECR (Use secrets for credentials)
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Step 4: Deploy to EC2
-      - name: Deploy to EC2
+      # Step 5: Push Docker image to Docker Hub
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker push duyquan0308/study-planner-api
+
+      # Step 6: SSH to EC2 and run the Docker container
+      - name: Deploy to EC2 via SSH
         env:
           EC2_USER: ubuntu # Adjust if your EC2 uses a different user
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_KEY: ${{ secrets.EC2_SSH_KEY }}
-          MONGO_DB_URI: ${{ secrets.MONGO_DB_URI }}
           NODE_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
         run: |
           # Save the SSH private key
@@ -52,41 +71,32 @@ jobs:
           # Add the EC2 host to known hosts
           ssh-keyscan -v -H $EC2_HOST >> ~/.ssh/known_hosts
 
-          # Transfer files to the EC2 server
-          echo "Transferring build files to EC2..."
-          scp -i ~/.ssh/ec2-key.pem -r ./dist $EC2_USER@$EC2_HOST:/var/www/study-planner-api
-
-          # Connect via SSH and execute commands
+          # Connect via SSH to deploy
           ssh -i ~/.ssh/ec2-key.pem $EC2_USER@$EC2_HOST << "EOF"
-            export PATH=$PATH:/home/ubuntu/.local/share/pnpm:/home/ubuntu/.nvm/versions/node/v20/bin:/usr/local/bin
-            if [ -f ~/.bashrc ]; then
-              source ~/.bashrc
+            # Check if Docker is installed
+            if ! command -v docker &> /dev/null; then
+              echo "Docker not found, installing Docker..."
+              sudo apt-get update
+              sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+              curl -fsSL https://get.docker.com -o get-docker.sh
+              sudo sh get-docker.sh
+              sudo usermod -aG docker $USER
+              newgrp docker
             fi
 
-            # Set up application directory
-            sudo mkdir -p /var/www/study-planner-api
-            sudo chown -R ubuntu:ubuntu /var/www/study-planner-api
-            cd /var/www/study-planner-api
+            # Pull the latest Docker image
+            echo "Pulling Docker image from Docker Hub... ${GITHUB_SHA}"
+            docker pull duyquan0308/study-planner-api
 
-            # Create environment variables
-            echo "Setting up environment variables..."
-            echo "MONGO_DB_URI=$MONGO_DB_URI\nNODE_ENV=$NODE_ENV\nPORT=80" > .env
+            # Stop and remove any existing container
+            docker ps -a -q --filter "name=study-planner-api" | xargs -r docker stop | xargs -r docker rm
 
-            # Install PM2 if not already installed
-            if ! command -v pm2 &> /dev/null; then
-              echo "Installing PM2..."
-              npm install -g pm2
-            fi
-
-            # Restart or start the app using PM2
-            if pm2 list | grep -q "study-planner-api"; then
-              echo "Restarting application..."
-              pm2 restart study-planner-api
-            else
-              echo "Starting application..."
-              pm2 start dist/apps/main-api/main.js --name study-planner-api --env $NODE_ENV
-              pm2 save
-            fi
+            # Run the Docker container
+            echo "Starting Docker container..."
+            docker run -d -p 8000:8000 --name study-planner-api \
+              -e MONGO_DB_URI=${MONGO_DB_URI} \
+              -e NODE_ENV=${NODE_ENV} \
+              duyquan0308/study-planner-api
 
             echo "Deployment complete!"
           EOF
