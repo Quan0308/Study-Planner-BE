@@ -69,6 +69,7 @@ jobs:
           EC2_KEY: ${{ secrets.EC2_SSH_KEY }}
           TAG: ${{ vars.TAG }}
         run: |
+          echo "PASSED TAG: $TAG"
           # Save the SSH private key
           mkdir -p ~/.ssh
           echo "$EC2_KEY" > ~/.ssh/ec2-key.pem
@@ -78,9 +79,8 @@ jobs:
           ssh-keyscan -v -H $EC2_HOST >> ~/.ssh/known_hosts
 
           # Connect via SSH to deploy
-          ssh -i ~/.ssh/ec2-key.pem $EC2_USER@$EC2_HOST << "EOF"
+          ssh -i ~/.ssh/ec2-key.pem $EC2_USER@$EC2_HOST "export TAG=${TAG} && echo \$TAG" << "EOF"
             # Pass environment variables to the remote server
-            export TAG=$TAG
             #debug tag
             echo "TAG: $TAG"
 
