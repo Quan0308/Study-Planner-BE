@@ -79,33 +79,32 @@ jobs:
           ssh-keyscan -v -H $EC2_HOST >> ~/.ssh/known_hosts
 
           # Connect via SSH to deploy
-          ssh -i ~/.ssh/ec2-key.pem $EC2_USER@$EC2_HOST "export TAG=${TAG} && echo \$TAG" << "EOF"
-            # Pass environment variables to the remote server
-            #debug tag
-            echo "TAG: $TAG"
-
+          ssh -i ~/.ssh/ec2-key.pem $EC2_USER@$EC2_HOST \
+            "set -e && \
+            export TAG=${TAG} && \
+            echo 'TAG: \$TAG' && \
+            
             # Check if Docker is installed
             if ! command -v docker &> /dev/null; then
-              echo "Docker not found, installing Docker..."
-              sudo apt-get update
-              sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-              curl -fsSL https://get.docker.com -o get-docker.sh
-              sudo sh get-docker.sh
-              sudo usermod -aG docker $USER
-              newgrp docker
-            fi
+              echo 'Docker not found, installing Docker...' && \
+              sudo apt-get update && \
+              sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common && \
+              curl -fsSL https://get.docker.com -o get-docker.sh && \
+              sudo sh get-docker.sh && \
+              sudo usermod -aG docker \$USER && \
+              newgrp docker; \
+            fi && \
 
             # Pull the latest Docker image
-            echo "Pulling Docker image from Docker Hub..."
-            docker pull duyquan0308/study-planner-api:\$TAG
+            echo 'Pulling Docker image from Docker Hub...' && \
+            docker pull duyquan0308/study-planner-api:\$TAG && \
 
             # Stop and remove any existing container
-            docker ps -a --filter "ancestor=duyquan0308/study-planner-api:$TAG" -q | xargs -r docker stop | xargs -r docker rm
+            docker ps -a --filter 'ancestor=duyquan0308/study-planner-api:\$TAG' -q | xargs -r docker stop | xargs -r docker rm && \
 
             # Run the Docker container
-            echo "Starting Docker container..."
-            docker run -d --name study-planner-api-$TAG \
-              duyquan0308/study-planner-api:$TAG
+            echo 'Starting Docker container...' && \
+            docker run -d --name study-planner-api-\$TAG \
+              duyquan0308/study-planner-api:\$TAG && \
 
-            echo "Deployment complete!"
-          EOF
+            echo 'Deployment complete!'"
