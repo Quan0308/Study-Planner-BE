@@ -1,13 +1,13 @@
 import { Logger, NotFoundException } from "@nestjs/common";
 import { Model, Types, FilterQuery, UpdateQuery } from "mongoose";
-import { AbstractEntity } from "./abstract.entity";
+import { AbstractEntity } from "../entities/abstract.entity";
 
 export abstract class AbstractRepository<T extends AbstractEntity> {
   protected abstract readonly logger: Logger;
 
   constructor(protected readonly model: Model<T>) {}
 
-  async create(document: Omit<T, "_id">): Promise<T> {
+  async create(document: Partial<T>): Promise<T> {
     const createDocument = new this.model({
       ...document,
       _id: new Types.ObjectId(),
@@ -44,5 +44,10 @@ export abstract class AbstractRepository<T extends AbstractEntity> {
 
   async findOneAndDelete(filterQuery: FilterQuery<T>): Promise<T> {
     return this.model.findOneAndDelete(filterQuery).lean<T>();
+  }
+
+  async findAllAndUpdate(filterQuery: FilterQuery<T>, update: UpdateQuery<T>): Promise<number> {
+    const result = await this.model.updateMany(filterQuery, update);
+    return result.modifiedCount;
   }
 }
