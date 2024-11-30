@@ -134,7 +134,7 @@ export class AuthService {
   async refreshAccessToken(refreshToken: string) {
     try {
       const firebaseUser = await this.firebaseService.refreshToken(refreshToken);
-      const dbUser = await this.userRepository.findOne({ uid: firebaseUser.uid });
+      const dbUser = await this.userRepository.findOne({ uid: firebaseUser.user_id });
       const accessToken = await this.firebaseService.generateCustomToken(dbUser.uid, {
         userId: dbUser._id,
         role: dbUser.role,
