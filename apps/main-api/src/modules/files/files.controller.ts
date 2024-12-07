@@ -1,14 +1,14 @@
-import { ConfirmUploadDto, UpdateFileDto, UploadFileDto } from "@app/types/dtos/buckets";
 import { Body, Controller, Delete, Get, Param, Post, Put, Redirect, UseGuards } from "@nestjs/common";
-import { BucketService } from "./bucket.service";
-import { CurrentUser } from "../../decorators";
-import { ICurrentUser } from "@app/types/interfaces";
-import { BypassTransformResponse } from "@app/utils/decorators";
 import { FirebaseJwtAuthGuard } from "../../guards";
+import { CurrentUser } from "../../decorators";
+import { BucketService } from "@app/shared-modules/bucket/bucket.service";
+import { BypassTransformResponse } from "@app/utils/decorators";
+import { ICurrentUser } from "@app/types/interfaces";
+import { ConfirmUploadDto, UpdateFileDto, UploadFileDto } from "@app/types/dtos/buckets";
 
 @Controller("files")
 @UseGuards(FirebaseJwtAuthGuard)
-export class BucketController {
+export class FilesController {
   constructor(private bucketService: BucketService) {}
 
   @Post("presigned-url")

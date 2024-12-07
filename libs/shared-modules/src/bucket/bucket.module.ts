@@ -1,7 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { S3Module } from "nestjs-s3";
-import { BucketController } from "./bucket.controller";
 import { BucketService } from "./bucket.service";
 import { DatabaseModule } from "@app/database";
 import { BucketRepository } from "@app/database/repositories/bucket.repository";
@@ -34,7 +33,6 @@ import { FirebaseModule } from "@app/shared-modules/firebase";
     ]),
     FirebaseModule,
   ],
-  controllers: [BucketController],
   providers: [BucketService, BucketRepository],
   exports: [BucketService],
 })

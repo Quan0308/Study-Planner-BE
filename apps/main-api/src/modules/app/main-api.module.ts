@@ -5,7 +5,7 @@ import { AuthModule } from "../auth/auth.module";
 import { DatabaseModule } from "@app/database";
 import { ConfigModule } from "@nestjs/config";
 import { UserModule } from "../user/user.module";
-import { BucketModule } from "../bucket/bucket.module";
+import { FilesModule } from "../files/files.module";
 
 @Module({
   imports: [
@@ -14,7 +14,7 @@ import { BucketModule } from "../bucket/bucket.module";
     }),
     DatabaseModule,
     AuthModule,
-    BucketModule,
+    FilesModule,
     UserModule,
   ],
   controllers: [MainApiController],
