@@ -4,6 +4,7 @@ import { UserService } from "./user.service";
 import { DatabaseModule } from "@app/database";
 import { User, UserSchema } from "@app/database/entities";
 import { UserRepository } from "@app/database/repositories";
+import { FirebaseModule } from "@app/shared-modules/firebase";
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { UserRepository } from "@app/database/repositories";
         schema: UserSchema,
       },
     ]),
+    FirebaseModule,
   ],
   controllers: [UserController],
   providers: [UserService, UserRepository],
