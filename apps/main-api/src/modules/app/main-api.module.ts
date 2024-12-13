@@ -6,6 +6,7 @@ import { DatabaseModule } from "@app/database";
 import { ConfigModule } from "@nestjs/config";
 import { UserModule } from "../user/user.module";
 import { FilesModule } from "../files/files.module";
+import { TaskModule } from "../task/task.module";
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { FilesModule } from "../files/files.module";
     AuthModule,
     FilesModule,
     UserModule,
+    TaskModule,
   ],
   controllers: [MainApiController],
   providers: [MainApiService],
