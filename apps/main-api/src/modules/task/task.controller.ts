@@ -18,7 +18,7 @@ export class TaskController {
   }
 
   @Get(":id")
-  async getTaskById(@CurrentUser() user: ICurrentUser, @Param("id") taskId: string) {
+  async getTaskById(@Param("id") taskId: string) {
     return this.taskService.getTaskById(taskId);
   }
 
@@ -28,12 +28,12 @@ export class TaskController {
   }
 
   @Put("/:id")
-  async updateTask(@CurrentUser() user: ICurrentUser, @Param("id") taskId: string, @Body() body: UpdateTaskDto) {
+  async updateTask(@Param("id") taskId: string, @Body() body: UpdateTaskDto) {
     return this.taskService.updateTask(taskId, body);
   }
 
   @Delete("/:id")
-  async deleteTask(@CurrentUser() user: ICurrentUser, @Param("id") taskId: string) {
+  async deleteTask(@Param("id") taskId: string) {
     return this.taskService.deleteTask(taskId);
   }
 }

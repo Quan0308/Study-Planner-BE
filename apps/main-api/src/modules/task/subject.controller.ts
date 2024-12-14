@@ -17,7 +17,7 @@ export class SubjectController {
   }
 
   @Get("/:id")
-  async getSubjectById(@CurrentUser() user: ICurrentUser, @Param("id") id: string) {
+  async getSubjectById(@Param("id") id: string) {
     return this.subjectService.getSubjectById(id);
   }
 
@@ -27,12 +27,12 @@ export class SubjectController {
   }
 
   @Put("/:id")
-  async updateSubject(@CurrentUser() user: ICurrentUser, @Param("id") id: string, @Body() data: UpdateSubjectDto) {
+  async updateSubject(@Param("id") id: string, @Body() data: UpdateSubjectDto) {
     return this.subjectService.updateSubject(id, data);
   }
 
   @Delete("/:id")
-  async deleteSubject(@CurrentUser() user: ICurrentUser, @Param("id") id: string) {
+  async deleteSubject(@Param("id") id: string) {
     return this.subjectService.deleteSubject(id);
   }
 }
