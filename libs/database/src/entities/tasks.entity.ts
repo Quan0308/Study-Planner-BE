@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 import { AbstractEntity } from "./abstract.entity";
-import { Prop, Schema } from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { TaskPriorityLevel, TaskStatus } from "@app/types/enum";
 
 @Schema({ versionKey: false, timestamps: true })
@@ -38,3 +38,5 @@ export class Task extends AbstractEntity {
   })
   priorityLevel: TaskPriorityLevel;
 }
+
+export const TaskSchema = SchemaFactory.createForClass(Task);

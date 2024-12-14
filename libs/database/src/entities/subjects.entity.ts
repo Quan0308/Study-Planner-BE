@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 import { AbstractEntity } from "./abstract.entity";
-import { Prop, Schema } from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
 @Schema({ versionKey: false, timestamps: true })
 export class Subject extends AbstractEntity {
@@ -20,3 +20,5 @@ export class Subject extends AbstractEntity {
   })
   color: string;
 }
+
+export const SubjectSchema = SchemaFactory.createForClass(Subject);
