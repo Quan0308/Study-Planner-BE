@@ -6,12 +6,12 @@ import { ICurrentUser } from "@app/types/interfaces";
 import { CreateSubjectDto, UpdateSubjectDto } from "@app/types/dtos/task";
 
 @UseGuards(FirebaseJwtAuthGuard)
-@Controller("subject")
+@Controller("subjects")
 export class SubjectController {
   private readonly logger = new Logger(this.constructor.name);
   constructor(private readonly subjectService: SubjectService) {}
 
-  @Get("/mine")
+  @Get("/")
   async getAllSubjectsByUserId(@CurrentUser() user: ICurrentUser) {
     return this.subjectService.getAllSubjectsByUserId(user.userId);
   }

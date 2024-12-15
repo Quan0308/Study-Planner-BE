@@ -3,6 +3,8 @@ import { TaskRepository } from "@app/database/repositories";
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { SubjectService } from "./subject.service";
 import { FilterQuery } from "mongoose";
+import { TaskQueryParams } from "./task.controller";
+import { SortOptions } from "@app/database/repositories/abstract.repository";
 
 @Injectable()
 export class TaskService {
@@ -13,9 +15,18 @@ export class TaskService {
     private subjectService: SubjectService
   ) {}
 
-  async getAllTasks(userId: string) {
+  async getAllTasks(filter: TaskQueryParams, sortOptions: SortOptions<Task>, page: number, limit: number) {
     try {
-      return await this.taskRepository.find({ userId });
+      const totalCount = await this.taskRepository.count(filter);
+      const tasks = await this.taskRepository.findPaginate(filter, sortOptions, page, limit);
+
+      return {
+        tasks,
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+      };
     } catch (error) {
       this.logger.error(error);
       throw new BadRequestException(error);

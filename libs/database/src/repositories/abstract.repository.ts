@@ -1,6 +1,10 @@
-import { Logger, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Logger, NotFoundException } from "@nestjs/common";
 import { Model, Types, FilterQuery, UpdateQuery } from "mongoose";
 import { AbstractEntity } from "../entities/abstract.entity";
+
+export type SortOptions<T> = {
+  [P in keyof T]?: "asc" | "desc";
+};
 
 export abstract class AbstractRepository<T extends AbstractEntity> {
   protected abstract readonly logger: Logger;
@@ -14,6 +18,27 @@ export abstract class AbstractRepository<T extends AbstractEntity> {
     });
     return (await createDocument.save()).toJSON() as unknown as T;
   }
+
+  async findPaginate(
+    filterQuery: FilterQuery<T>,
+    sortOptions: SortOptions<T>,
+    page: number,
+    limit: number
+  ): Promise<T[]> {
+    try {
+      const documents = await this.model
+        .find(filterQuery)
+        .sort(sortOptions)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean<T[]>();
+      return documents;
+    } catch (error) {
+      this.logger.error(error);
+      throw new BadRequestException(error);
+    }
+  }
+
   async findOne(filterQuery: FilterQuery<T>): Promise<T> {
     const document = await this.model.findOne(filterQuery).lean<T>();
 
@@ -40,6 +65,10 @@ export abstract class AbstractRepository<T extends AbstractEntity> {
 
   async find(filterQuery: FilterQuery<T>): Promise<T[]> {
     return this.model.find(filterQuery).lean<T[]>();
+  }
+
+  async count(filterQuery: FilterQuery<T>): Promise<number> {
+    return this.model.countDocuments(filterQuery);
   }
 
   async findOneAndDelete(filterQuery: FilterQuery<T>): Promise<T> {
