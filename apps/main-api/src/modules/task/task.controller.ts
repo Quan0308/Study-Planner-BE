@@ -12,6 +12,11 @@ export class TaskController {
   private readonly logger = new Logger(this.constructor.name);
   constructor(private taskService: TaskService) {}
 
+  @Get("")
+  async getTasks(@CurrentUser() user: ICurrentUser) {
+    return this.taskService.getAllTasks(user.userId);
+  }
+
   @Get("/weekly")
   async getWeeklyTasks(@CurrentUser() user: ICurrentUser, @Query("from", new ParseDatePipe()) start: Date) {
     return this.taskService.getWeeklyTasks(user.userId, start);

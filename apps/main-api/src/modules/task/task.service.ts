@@ -13,6 +13,15 @@ export class TaskService {
     private subjectService: SubjectService
   ) {}
 
+  async getAllTasks(userId: string) {
+    try {
+      return await this.taskRepository.find({ userId });
+    } catch (error) {
+      this.logger.error(error);
+      throw new BadRequestException(error);
+    }
+  }
+
   async getTaskById(taskId: string) {
     try {
       return await this.taskRepository.findOne({ _id: taskId });
