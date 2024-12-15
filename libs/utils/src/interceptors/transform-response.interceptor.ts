@@ -15,7 +15,7 @@ const transform = <T extends DataType>(rawData: T, cls?: new () => any): ISucces
     data: null,
   };
 
-  if (!isNil(rawData) || !isNil(cls)) {
+  if (!isNil(rawData) && !isNil(cls)) {
     response.data = plainToInstance(cls, rawData, { excludeExtraneousValues: true });
   } else {
     response.data = rawData;
