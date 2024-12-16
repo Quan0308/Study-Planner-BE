@@ -4,10 +4,28 @@ import { OmitType, PartialType } from "@nestjs/mapped-types";
 import { Type } from "class-transformer";
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
+import { ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments, Validate } from "class-validator";
+
+@ValidatorConstraint({ name: "endDateAfterStartDate", async: false })
+class EndDateAfterStartDate implements ValidatorConstraintInterface {
+  validate(endDate: Date, args: ValidationArguments) {
+    const object = args.object as any;
+    return !endDate || !object.startDate || endDate > object.startDate;
+  }
+
+  defaultMessage() {
+    return "endDate must be after startDate";
+  }
+}
+
 export class CreateTaskDto extends PartialType(OmitType(Task, ["userId"] as const)) {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 
   @IsOptional()
   @Type(() => Date)
@@ -15,6 +33,7 @@ export class CreateTaskDto extends PartialType(OmitType(Task, ["userId"] as cons
 
   @IsOptional()
   @Type(() => Date)
+  @Validate(EndDateAfterStartDate)
   endDate?: Date;
 
   @IsOptional()
