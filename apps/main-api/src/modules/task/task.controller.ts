@@ -27,8 +27,9 @@ import { ParseDatePipe } from "../../pipes";
 export type TaskQueryParams = FilterQuery<Task>;
 
 function get6DaysFromDate(date: Date) {
-  date.setDate(date.getDate() + 6);
-  return date;
+  const dateCopy = new Date(date);
+  dateCopy.setDate(date.getDate() + 6);
+  return dateCopy;
 }
 
 @UseGuards(FirebaseJwtAuthGuard)
