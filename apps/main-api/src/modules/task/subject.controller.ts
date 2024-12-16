@@ -6,18 +6,18 @@ import { ICurrentUser } from "@app/types/interfaces";
 import { CreateSubjectDto, UpdateSubjectDto } from "@app/types/dtos/task";
 
 @UseGuards(FirebaseJwtAuthGuard)
-@Controller("subject")
+@Controller("subjects")
 export class SubjectController {
   private readonly logger = new Logger(this.constructor.name);
   constructor(private readonly subjectService: SubjectService) {}
 
-  @Get("/mine")
+  @Get("/")
   async getAllSubjectsByUserId(@CurrentUser() user: ICurrentUser) {
     return this.subjectService.getAllSubjectsByUserId(user.userId);
   }
 
   @Get("/:id")
-  async getSubjectById(@CurrentUser() user: ICurrentUser, @Param("id") id: string) {
+  async getSubjectById(@Param("id") id: string) {
     return this.subjectService.getSubjectById(id);
   }
 
@@ -27,12 +27,12 @@ export class SubjectController {
   }
 
   @Put("/:id")
-  async updateSubject(@CurrentUser() user: ICurrentUser, @Param("id") id: string, @Body() data: UpdateSubjectDto) {
+  async updateSubject(@Param("id") id: string, @Body() data: UpdateSubjectDto) {
     return this.subjectService.updateSubject(id, data);
   }
 
   @Delete("/:id")
-  async deleteSubject(@CurrentUser() user: ICurrentUser, @Param("id") id: string) {
+  async deleteSubject(@Param("id") id: string) {
     return this.subjectService.deleteSubject(id);
   }
 }
