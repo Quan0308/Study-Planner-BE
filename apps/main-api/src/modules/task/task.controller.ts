@@ -46,8 +46,8 @@ export class TaskController {
     @Query("status") status?: string | string[],
     @Query("priorityLevel") priorityLevel?: string | string[],
     @Query("subjectId") subjectId?: string | string[],
-    @Query("from", new ParseDatePipe()) from?: Date,
-    @Query("to", new ParseDatePipe()) to?: Date,
+    @Query("from", new ParseDatePipe(false)) from?: Date,
+    @Query("to", new ParseDatePipe(false)) to?: Date,
     @Query("sortBy") sortBy: string = "startDate",
     @Query("sortOrder") sortOrder: SortOptions<Task>[keyof Task] = "asc"
   ) {
