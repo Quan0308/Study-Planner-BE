@@ -9,7 +9,7 @@ import { ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments,
 @ValidatorConstraint({ name: "endDateAfterStartDate", async: false })
 class EndDateAfterStartDate implements ValidatorConstraintInterface {
   validate(endDate: Date, args: ValidationArguments) {
-    const object = args.object as any;
+    const object = args.object as CreateTaskDto;
     return !endDate || !object.startDate || endDate > object.startDate;
   }
 
