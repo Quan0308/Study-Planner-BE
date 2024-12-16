@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   DefaultValuePipe,
@@ -21,21 +22,14 @@ import { FilterQuery } from "mongoose";
 import { Task } from "@app/database/entities";
 import { TaskPriorityLevel, TaskStatus } from "@app/types/enum";
 import { SortOptions } from "@app/database/repositories/abstract.repository";
+import { ParseDatePipe } from "../../pipes";
 
 export type TaskQueryParams = FilterQuery<Task>;
 
-function getStartOfWeek(date: Date): Date {
-  const dayOfWeek = date.getDay();
-  const diff = date.getDate() - dayOfWeek;
-  return new Date(date.setDate(diff));
-}
-
-function getEndOfWeek(date: Date): Date {
-  const start = getStartOfWeek(date);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  end.setHours(23, 59, 59, 999);
-  return end;
+function get6DaysFromDate(date: Date) {
+  const dateCopy = new Date(date);
+  dateCopy.setDate(date.getDate() + 6);
+  return dateCopy;
 }
 
 @UseGuards(FirebaseJwtAuthGuard)
@@ -50,10 +44,11 @@ export class TaskController {
     @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query("limit", new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query("name") name?: string,
-    @Query("status") status?: string,
-    @Query("priorityLevel") priorityLevel?: string,
-    @Query("subjectId") subjectId?: string,
-    @Query("weekly") weekly?: string,
+    @Query("status") status?: string | string[],
+    @Query("priorityLevel") priorityLevel?: string | string[],
+    @Query("subjectId") subjectId?: string | string[],
+    @Query("from", new ParseDatePipe(false)) from?: Date,
+    @Query("to", new ParseDatePipe(false)) to?: Date,
     @Query("sortBy") sortBy: string = "startDate",
     @Query("sortOrder") sortOrder: SortOptions<Task>[keyof Task] = "asc"
   ) {
@@ -65,22 +60,30 @@ export class TaskController {
     }
 
     if (status) {
-      filter.status = { $in: status.split(",") as TaskStatus[] };
+      filter.status = { $in: Array.isArray(status) ? status : ([status] as TaskStatus[]) };
     }
 
     if (priorityLevel) {
-      filter.priorityLevel = { $in: priorityLevel.split(",") as TaskPriorityLevel[] };
+      filter.priorityLevel = {
+        $in: Array.isArray(priorityLevel) ? priorityLevel : ([priorityLevel] as TaskPriorityLevel[]),
+      };
+    }
+
+    if (from) {
+      filter.startDate = { $gte: from };
+
+      if (to) {
+        if (to < from) throw new BadRequestException("to must be after from");
+        filter.endDate = { $lt: to };
+      } else {
+        filter.endDate = { $lt: get6DaysFromDate(from) };
+      }
+    } else if (to) {
+      throw new BadRequestException("from is required when to is provided");
     }
 
     if (subjectId) {
-      filter.subjectId = { $in: subjectId.split(",") };
-    }
-
-    if (weekly) {
-      const weeklyDate = new Date(weekly);
-      const startOfWeek = getStartOfWeek(weeklyDate);
-      const endOfWeek = getEndOfWeek(weeklyDate);
-      filter.startDate = { $gte: startOfWeek, $lte: endOfWeek };
+      filter.subjectId = { $in: Array.isArray(subjectId) ? subjectId : [subjectId] };
     }
 
     const sortOptions: SortOptions<Task> = {};
