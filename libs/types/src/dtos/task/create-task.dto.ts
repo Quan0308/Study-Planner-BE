@@ -6,11 +6,23 @@ import { IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 import { ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments, Validate } from "class-validator";
 
+@ValidatorConstraint({ name: "startDateExists", async: false })
+class StartDateExists implements ValidatorConstraintInterface {
+  validate(_: Date, args: ValidationArguments) {
+    const object = args.object as CreateTaskDto;
+    return object.startDate != null;
+  }
+
+  defaultMessage() {
+    return "startDate must be defined if endDate is defined";
+  }
+}
+
 @ValidatorConstraint({ name: "endDateAfterStartDate", async: false })
 class EndDateAfterStartDate implements ValidatorConstraintInterface {
   validate(endDate: Date, args: ValidationArguments) {
     const object = args.object as CreateTaskDto;
-    return !endDate || !object.startDate || endDate > object.startDate;
+    return !object.startDate || endDate > object.startDate;
   }
 
   defaultMessage() {
@@ -33,6 +45,7 @@ export class CreateTaskDto extends PartialType(OmitType(Task, ["userId"] as cons
 
   @IsOptional()
   @Type(() => Date)
+  @Validate(StartDateExists)
   @Validate(EndDateAfterStartDate)
   endDate?: Date;
 
