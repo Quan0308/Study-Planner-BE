@@ -7,6 +7,7 @@ import { TaskQueryParams } from "./task.controller";
 import { SortOptions } from "@app/database/repositories/abstract.repository";
 import { Cron } from "@nestjs/schedule";
 import { TaskStatus } from "@app/types/enum";
+import { VN_TIMEZONE } from "@app/types/constants";
 
 @Injectable()
 export class TaskService {
@@ -100,15 +101,15 @@ export class TaskService {
 
   // DEBUG, run every 30 seconds
   // @Cron("*/30 * * * * *")
-  @Cron("0 17 * * *") // Run every day at 5 PM UTC time (Viet Nam midnight)
+  @Cron("0 0 * * *", { timeZone: VN_TIMEZONE })
   async updateTaskStatus() {
     try {
       const filterQuery: FilterQuery<Task> = {
         status: {
-          $ne: TaskStatus.OVERDUE,
+          $nin: [TaskStatus.DONE, TaskStatus.OVERDUE],
         },
-        startDate: {
-          $lte: new Date(),
+        endDate: {
+          $lt: new Date(), // End date is less than current
         },
       };
 
