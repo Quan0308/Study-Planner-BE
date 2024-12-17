@@ -7,12 +7,14 @@ import { ConfigModule } from "@nestjs/config";
 import { UserModule } from "../user/user.module";
 import { FilesModule } from "../files/files.module";
 import { TaskModule } from "../task/task.module";
+import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     AuthModule,
     FilesModule,

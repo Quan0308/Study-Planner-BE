@@ -5,6 +5,8 @@ import { SubjectService } from "./subject.service";
 import { FilterQuery } from "mongoose";
 import { TaskQueryParams } from "./task.controller";
 import { SortOptions } from "@app/database/repositories/abstract.repository";
+import { Cron } from "@nestjs/schedule";
+import { TaskStatus } from "@app/types/enum";
 
 @Injectable()
 export class TaskService {
@@ -90,6 +92,32 @@ export class TaskService {
   async deleteTask(taskId: string) {
     try {
       return await this.taskRepository.findOneAndDelete({ _id: taskId });
+    } catch (error) {
+      this.logger.error(error);
+      throw new BadRequestException(error);
+    }
+  }
+
+  // DEBUG, run every 30 seconds
+  // @Cron("*/30 * * * * *")
+  @Cron("0 17 * * *") // Run every day at 5 PM UTC time (Viet Nam midnight)
+  async updateTaskStatus() {
+    try {
+      const filterQuery: FilterQuery<Task> = {
+        status: {
+          $ne: TaskStatus.OVERDUE,
+        },
+        startDate: {
+          $lte: new Date(),
+        },
+      };
+
+      const updateQuery = {
+        status: TaskStatus.OVERDUE,
+      };
+
+      const count = await this.taskRepository.findAllAndUpdate(filterQuery, updateQuery);
+      this.logger.log(`Updated ${count} tasks to overdue status`);
     } catch (error) {
       this.logger.error(error);
       throw new BadRequestException(error);
