@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { MainApiModule } from '../src/modules/app/main-api.module';
+import { Test, TestingModule } from "@nestjs/testing";
+import { INestApplication } from "@nestjs/common";
+import * as request from "supertest";
+import { MainApiModule } from "../src/modules/app/main-api.module";
 
-describe('MainApiController (e2e)', () => {
+describe("MainApiController (e2e)", () => {
   let app: INestApplication;
 
   beforeEach(async () => {
@@ -15,10 +15,7 @@ describe('MainApiController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+  it("/ (GET)", () => {
+    return request(app.getHttpServer()).get("/").expect(200).expect("Hello World!");
   });
 });

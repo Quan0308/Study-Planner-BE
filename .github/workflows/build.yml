@@ -84,8 +84,8 @@ jobs:
             "set -e && \
             export TAG=${TAG} && \
             export PORT=${PORT} && \
-            echo 'TAG: \$TAG' && \
-            echo 'PORT: \$PORT' && \
+            echo 'TAG: $TAG' && \
+            echo 'PORT: $PORT' && \
             
             # Check if Docker is installed
             if ! command -v docker &> /dev/null; then
@@ -98,12 +98,18 @@ jobs:
               newgrp docker; \
             fi && \
 
-            # Pull the latest Docker image
+           
+            # Stop and remove any existing container
+            echo 'remove container with name: study-planner-api-$TAG' && \
+            docker ps -a --filter 'name=study-planner-api-$TAG' -q | xargs -r docker stop | xargs -r docker rm && \
+
+            #prune all volumes
+            docker system prune -a --volumes -f && \
+
+           # Pull the latest Docker image
             echo 'Pulling Docker image from Docker Hub...' && \
             docker pull duyquan0308/study-planner-api:\$TAG && \
 
-            # Stop and remove any existing container
-            docker ps -a --filter 'name=study-planner-api-\$TAG' -q | xargs -r docker stop | xargs -r docker rm && \
 
             # Run the Docker container
             echo 'Starting Docker container on port $PORT' && \

@@ -26,4 +26,7 @@ export const ThrowFirstErrorValidationPipe = new ValidationPipe({
     const firstConstraintKey = Object.keys(constraints)[0];
     throw new BadRequestException(constraints[firstConstraintKey]);
   },
+  whitelist: true,
+  forbidUnknownValues: true,
+  forbidNonWhitelisted: true,
 });
