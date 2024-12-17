@@ -3,4 +3,5 @@ export enum TaskStatus {
   IN_PROGRESS = "in-progress",
   DONE = "done",
   BLOCKED = "blocked",
+  OVERDUE = "overdue",
 }
