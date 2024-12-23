@@ -29,6 +29,13 @@ export class Task extends AbstractEntity {
 
   @Prop({
     type: Types.ObjectId,
+    ref: "Session",
+    required: false,
+  })
+  sessionIds: string[];
+
+  @Prop({
+    type: Types.ObjectId,
     ref: "User",
     required: true,
   })

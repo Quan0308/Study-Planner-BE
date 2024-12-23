@@ -11,6 +11,9 @@ export class Session extends AbstractEntity {
   @Prop({ type: Number, required: false })
   break: number;
 
+  @Prop({ type: Number, required: true })
+  trueDuration: number;
+
   @Prop({ type: String, enum: SessionStatus, required: true, default: SessionStatus.INACTIVE })
   status: SessionStatus;
 
@@ -19,7 +22,7 @@ export class Session extends AbstractEntity {
     ref: "Task",
     required: true,
   })
-  taskId: string;
+  taskIds: string[];
 
   @Prop({
     type: Types.ObjectId,
