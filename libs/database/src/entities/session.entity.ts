@@ -8,13 +8,13 @@ export class Session extends AbstractEntity {
   @Prop({ type: Number, required: true })
   duration: number;
 
-  @Prop({ type: Number, required: false })
+  @Prop({ type: Number, required: false, default: 0 })
   break: number;
 
-  @Prop({ type: Number, required: true })
+  @Prop({ type: Number, required: true, default: 0 })
   trueDuration: number;
 
-  @Prop({ type: String, enum: SessionStatus, required: true, default: SessionStatus.INACTIVE })
+  @Prop({ type: String, enum: SessionStatus, required: true, default: SessionStatus.ACTIVE })
   status: SessionStatus;
 
   @Prop({
