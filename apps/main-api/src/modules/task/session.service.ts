@@ -1,8 +1,11 @@
+import { Session } from "@app/database/entities";
 import { SessionRepository, TaskRepository } from "@app/database/repositories";
 import { CreateSessionDto, UpdateSessionDto } from "@app/types/dtos/sessions";
 import { SessionStatus } from "@app/types/enum";
 import { ICurrentUser } from "@app/types/interfaces";
+import get6DaysFromDate from "@app/utils/datetime/datetime";
 import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { FilterQuery } from "mongoose";
 
 @Injectable()
 export class SessionService {
@@ -40,6 +43,32 @@ export class SessionService {
       if (error instanceof NotFoundException) {
         throw new NotFoundException("Invalid session");
       }
+      throw new BadRequestException(error);
+    }
+  }
+
+  async getSessionHistory(user: ICurrentUser, from: Date, to: Date) {
+    try {
+      const { userId } = user;
+      const filter: FilterQuery<Session> = {};
+      filter.userId = userId;
+
+      if (from) {
+        filter.createdAt = { $gte: from };
+        if (to) {
+          if (to < from) throw new BadRequestException("to must be after from");
+          filter.createdAt = { $lt: to };
+        } else {
+          filter.createdAt = { $lt: get6DaysFromDate(from) };
+        }
+      } else if (to) {
+        throw new BadRequestException("from is required when to is provided");
+      }
+
+      const data = await this.sessionRepository.getSessionWithHistory(filter);
+      return data;
+    } catch (error) {
+      this.logger.error(error);
       throw new BadRequestException(error);
     }
   }
