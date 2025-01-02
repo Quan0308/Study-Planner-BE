@@ -47,7 +47,7 @@ export class SessionService {
     }
   }
 
-  async getSessionHistory(user: ICurrentUser, from: Date, to: Date) {
+  async getSessionHistory(user: ICurrentUser, from?: Date, to?: Date, status?: string | string[]) {
     try {
       const { userId } = user;
       const filter: FilterQuery<Session> = {};
@@ -63,6 +63,10 @@ export class SessionService {
         }
       } else if (to) {
         throw new BadRequestException("from is required when to is provided");
+      }
+
+      if (status) {
+        filter.status = Array.isArray(status) ? { $in: status } : status;
       }
 
       const data = await this.sessionRepository.getSessionWithHistory(filter);

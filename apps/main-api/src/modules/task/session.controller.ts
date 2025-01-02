@@ -15,9 +15,10 @@ export class SessionController {
   async getSessionHistory(
     @CurrentUser() user: ICurrentUser,
     @Query("from", new ParseDatePipe(false)) from: Date,
-    @Query("to", new ParseDatePipe(false)) to: Date
+    @Query("to", new ParseDatePipe(false)) to: Date,
+    @Query("status") status?: string | string[]
   ) {
-    return this.sessionService.getSessionHistory(user, from, to);
+    return this.sessionService.getSessionHistory(user, from, to, status);
   }
 
   @Post()
