@@ -1,7 +1,7 @@
 import { Body, Controller, Get, ParseEnumPipe, Post, Query, Request, UseGuards } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { ResetPasswordGuard } from "../../guards/reset-password.guard";
-import { FirebaseJwtAuthGuard } from "../../guards";
+import { FirebaseJwtAuthGuard, VerifyMailGuard } from "../../guards";
 import { RequestName } from "@app/types/enum";
 import {
   LogInDto,
@@ -11,6 +11,8 @@ import {
   ResetPasswordDto,
   VerifyOtpDto,
 } from "@app/types/dtos/auth";
+import { CurrentUser } from "../../decorators";
+import { ICurrentUser } from "@app/types/interfaces";
 
 @Controller("auth")
 export class AuthController {
@@ -48,6 +50,12 @@ export class AuthController {
   async resetPassword(@Request() request: any, @Body() data: ResetPasswordDto) {
     const { uid } = request.user as { uid: string };
     return this.authService.updatePassword(uid, data.newPassword);
+  }
+
+  @Post("verify-account")
+  @UseGuards(FirebaseJwtAuthGuard, VerifyMailGuard)
+  async verifyAccount(@CurrentUser() user: ICurrentUser) {
+    return this.authService.verifyMail(user.userId);
   }
 
   @Post("refresh")

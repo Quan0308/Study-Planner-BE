@@ -53,6 +53,13 @@ export class User extends AbstractEntity {
   @IsOptional()
   @IsEnum(Gender)
   gender: Gender;
+
+  @Prop({
+    type: Boolean,
+    required: false,
+    default: false,
+  })
+  isVerified: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
