@@ -56,10 +56,16 @@ export class SessionService {
       if (from) {
         filter.createdAt = { $gte: from };
         if (to) {
-          if (to < from) throw new BadRequestException("to must be after from");
-          filter.createdAt = { $lt: to };
+          if (to < from) {
+            throw new BadRequestException("to must be after from");
+          }
+          const endOfDay = new Date(to);
+          endOfDay.setHours(23, 59, 59, 999);
+          filter.createdAt = { ...filter.createdAt, $lt: endOfDay };
         } else {
-          filter.createdAt = { $lt: get6DaysFromDate(from) };
+          const endOf6thDay = get6DaysFromDate(from);
+          endOf6thDay.setHours(23, 59, 59, 999);
+          filter.createdAt = { ...filter.createdAt, $lt: endOf6thDay };
         }
       } else if (to) {
         throw new BadRequestException("from is required when to is provided");
