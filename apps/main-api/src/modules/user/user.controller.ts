@@ -5,16 +5,27 @@ import { CurrentUser, Serialize } from "../../decorators";
 import { ICurrentUser } from "@app/types/interfaces";
 import { UpdateProfileDto } from "@app/types/dtos/user";
 import { ChangePasswordDto } from "@app/types/dtos/auth/change-password.dto";
+import { BucketService } from "@app/shared-modules/bucket/bucket.service";
 
 @UseGuards(FirebaseJwtAuthGuard)
 @Controller("user")
 export class UserController {
   private readonly logger = new Logger(this.constructor.name);
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private bucketService: BucketService
+  ) {}
 
   @Get("/profile")
   async getUserProfile(@CurrentUser() user: ICurrentUser) {
-    return this.userService.getUserProfile(user);
+    const profile = await this.userService.getUserProfile(user);
+
+    const avatar = await this.bucketService.getUserMostRecentFile(user);
+
+    return {
+      ...profile,
+      avatarId: avatar?._id || null,
+    };
   }
 
   @Serialize(UpdateProfileDto)
