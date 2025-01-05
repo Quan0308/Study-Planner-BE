@@ -34,7 +34,7 @@ export class AuthService {
     try {
       const firebaseUser = await this.firebaseService.verifyOAuthCredential(credential, provider);
       const { email } = firebaseUser;
-      let dbUser: User = await this.userRepository.findOne({ email });
+      let dbUser: User = await this.userRepository.findOne({ email }, true);
       if (!dbUser) {
         const generatedPassword = otpGenerator(8, generatePasswordConfig);
         await this.firebaseService.linkWithProvider(firebaseUser.idToken, firebaseUser.email, generatedPassword);
