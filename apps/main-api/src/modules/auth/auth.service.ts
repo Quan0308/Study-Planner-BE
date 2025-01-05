@@ -38,7 +38,12 @@ export class AuthService {
       if (!dbUser) {
         const generatedPassword = otpGenerator(8, generatePasswordConfig);
         await this.firebaseService.linkWithProvider(firebaseUser.idToken, firebaseUser.email, generatedPassword);
-        dbUser = await this.userRepository.create({ email, uid: firebaseUser.uid, username: email, isVerified: true });
+        dbUser = await this.userRepository.create({
+          email,
+          uid: firebaseUser.localId,
+          username: email,
+          isVerified: true,
+        });
       } else {
         await this.firebaseService.setEmailVerifed(dbUser.uid);
         dbUser = await this.userRepository.findOneAndUpate({ _id: dbUser._id }, { isVerified: true });
