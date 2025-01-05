@@ -7,6 +7,7 @@ import {
   Get,
   Logger,
   Param,
+  ParseBoolPipe,
   ParseIntPipe,
   Post,
   Put,
@@ -50,7 +51,17 @@ export class TaskController {
     @Query("from", new ParseDatePipe(false)) from?: Date,
     @Query("to", new ParseDatePipe(false)) to?: Date,
     @Query("sortBy") sortBy: string = "startDate",
-    @Query("sortOrder") sortOrder: SortOptions<Task>[keyof Task] = "asc"
+    @Query("sortOrder") sortOrder: SortOptions<Task>[keyof Task] = "asc",
+    @Query(
+      "nodate",
+      new DefaultValuePipe(false),
+      new ParseBoolPipe({
+        exceptionFactory() {
+          throw new BadRequestException("Invalid noDate value, must be a true or false");
+        },
+      })
+    )
+    noDate?: boolean
   ) {
     const filter: TaskQueryParams = {};
     filter.userId = user.userId;
@@ -84,6 +95,15 @@ export class TaskController {
 
     if (subjectId) {
       filter.subjectId = { $in: Array.isArray(subjectId) ? subjectId : [subjectId] };
+    }
+
+    if (noDate) {
+      if (from || to) {
+        throw new BadRequestException("from and to are not allowed when noDate is true");
+      }
+
+      filter.startDate = { $exists: false };
+      filter.endDate = { $exists: false };
     }
 
     const sortOptions: SortOptions<Task> = {};
