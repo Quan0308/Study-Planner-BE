@@ -20,9 +20,12 @@ export class UserController {
   async getUserProfile(@CurrentUser() user: ICurrentUser) {
     const profile = await this.userService.getUserProfile(user);
 
-    const avatarId = (await this.bucketService.getUserMostRecentFile(user))._id;
+    const avatar = await this.bucketService.getUserMostRecentFile(user);
 
-    return { ...profile, avatarId };
+    return {
+      ...profile,
+      avatarId: avatar?._id || null,
+    };
   }
 
   @Serialize(UpdateProfileDto)

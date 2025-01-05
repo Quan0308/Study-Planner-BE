@@ -84,14 +84,16 @@ export class BucketService {
 
   async getUserMostRecentFile(user: ICurrentUser) {
     try {
-      return (
-        await this.bucketRepository.findPaginate(
-          { owner: user.userId, uploadStatus: BucketUploadStatusEnum.UPLOADED },
-          { updatedAt: -1 } as any,
-          1,
-          1
-        )
-      )[0];
+      const files = await this.bucketRepository.findPaginate(
+        { owner: user.userId, uploadStatus: BucketUploadStatusEnum.UPLOADED },
+        { updatedAt: -1 } as any,
+        1,
+        1
+      );
+      if (Array.isArray(files) && files.length > 0) {
+        return files[0];
+      }
+      return null;
     } catch (error) {
       this.logger.error(error);
       throw new BadRequestException(error);
