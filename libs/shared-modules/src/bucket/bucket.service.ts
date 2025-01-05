@@ -73,6 +73,31 @@ export class BucketService {
     }
   }
 
+  async getUserFiles(user: ICurrentUser) {
+    try {
+      return this.bucketRepository.find({ owner: user.userId });
+    } catch (error) {
+      this.logger.error(error);
+      throw new BadRequestException(error);
+    }
+  }
+
+  async getUserMostRecentFile(user: ICurrentUser) {
+    try {
+      return (
+        await this.bucketRepository.findPaginate(
+          { owner: user.userId, uploadStatus: BucketUploadStatusEnum.UPLOADED },
+          { updatedAt: -1 } as any,
+          1,
+          1
+        )
+      )[0];
+    } catch (error) {
+      this.logger.error(error);
+      throw new BadRequestException(error);
+    }
+  }
+
   async deleteFile(user: ICurrentUser, fileId: string) {
     try {
       const data = await this.bucketRepository.findOne({ _id: fileId });
@@ -94,6 +119,20 @@ export class BucketService {
       }
 
       return { affected: 1 };
+    } catch (error) {
+      this.logger.error(error);
+      throw new BadRequestException(error);
+    }
+  }
+
+  async cleanUserFiles(user: ICurrentUser) {
+    try {
+      const existingFiles = await this.bucketRepository.find({ owner: user.userId });
+      for (const file of existingFiles) {
+        const command = new DeleteObjectCommand({ Bucket: this.bucketName, Key: file._id.toString() });
+        await this.s3.send(command);
+      }
+      this.logger.log(`Cleaned ${existingFiles.length} files for user ${user.userId}`);
     } catch (error) {
       this.logger.error(error);
       throw new BadRequestException(error);

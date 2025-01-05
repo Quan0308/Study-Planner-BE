@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Redirect, UseGuards } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Redirect,
+  UseGuards,
+} from "@nestjs/common";
 import { FirebaseJwtAuthGuard } from "../../guards";
 import { CurrentUser } from "../../decorators";
 import { BucketService } from "@app/shared-modules/bucket/bucket.service";
@@ -13,6 +24,12 @@ export class FilesController {
 
   @Post("presigned-url")
   async getPresignedUploadUrl(@CurrentUser() user: ICurrentUser, @Body() body: UploadFileDto) {
+    const files = await this.bucketService.getUserFiles(user);
+
+    if (files.length) {
+      throw new BadRequestException("Existing file(s): [" + files.map((f) => f._id).join(",") + "]");
+    }
+
     return this.bucketService.getPresignedUploadUrl(user, body);
   }
 
