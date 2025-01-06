@@ -6,6 +6,7 @@ import { generate as otpGenerator } from "otp-generator";
 import { generateOTPConfig, generatePasswordConfig } from "../../config";
 import { RequestName } from "@app/types/enum";
 import { MailService } from "@app/shared-modules/mail/mail.service";
+import { SubjectMail } from "@app/types/maps";
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(this.constructor.name);
@@ -19,8 +20,9 @@ export class AuthService {
 
   async registerUser(email: string, password: string) {
     try {
-      const firebaseUser = await this.firebaseService.createUserByEmailAndPassword(email, password, true);
+      const firebaseUser = await this.firebaseService.createUserByEmailAndPassword(email, password, false);
       await this.userRepository.create({ email, uid: firebaseUser.uid, username: email });
+      await this.sendOtp(email, RequestName.VERIFY_MAIL);
       return "Sign up successfully";
     } catch (error) {
       this.logger.error(error);
@@ -32,10 +34,19 @@ export class AuthService {
     try {
       const firebaseUser = await this.firebaseService.verifyOAuthCredential(credential, provider);
       const { email } = firebaseUser;
-      const dbUser: User = await this.userRepository.findOne({ email });
+      let dbUser: User = await this.userRepository.findOne({ email }, true);
       if (!dbUser) {
         const generatedPassword = otpGenerator(8, generatePasswordConfig);
         await this.firebaseService.linkWithProvider(firebaseUser.idToken, firebaseUser.email, generatedPassword);
+        dbUser = await this.userRepository.create({
+          email,
+          uid: firebaseUser.localId,
+          username: email,
+          isVerified: true,
+        });
+      } else {
+        await this.firebaseService.setEmailVerifed(dbUser.uid);
+        dbUser = await this.userRepository.findOneAndUpate({ _id: dbUser._id }, { isVerified: true });
       }
       const claims = { userId: dbUser._id, role: dbUser.role };
       const accessToken = await this.firebaseService.generateCustomToken(dbUser.uid, claims);
@@ -50,6 +61,10 @@ export class AuthService {
     try {
       const firebaseUser = await this.firebaseService.verifyUser(email, password);
       const dbUser = await this.userRepository.findOne({ email });
+      if (!dbUser.isVerified) {
+        await this.sendOtp(email, RequestName.VERIFY_MAIL);
+        return "You have not verified email";
+      }
       const accessToken = await this.firebaseService.generateCustomToken(dbUser.uid, {
         userId: dbUser._id,
         role: dbUser.role,
@@ -69,6 +84,7 @@ export class AuthService {
       }
       const otp = otpGenerator(6, generateOTPConfig);
       const verifyToken = await this.firebaseService.generateCustomToken(dbUser.uid, {
+        userId: dbUser._id,
         uid: dbUser.uid,
         requestName,
       });
@@ -85,7 +101,7 @@ export class AuthService {
       });
 
       if (saved) {
-        const res = await this.mailService.sendMail(dbUser.email, "Reset Password", requestName, { otp });
+        const res = await this.mailService.sendMail(dbUser.email, SubjectMail.get(requestName), requestName, { otp });
         return res.accepted.length > 0;
       }
       return false;
@@ -125,6 +141,16 @@ export class AuthService {
     try {
       await this.firebaseService.changePassword(uid, newPassword);
       return "OK";
+    } catch (error) {
+      this.logger.error(error);
+      throw new BadRequestException(error);
+    }
+  }
+
+  async verifyMail(userId: string) {
+    try {
+      const dbUser = await this.userRepository.findOneAndUpate({ _id: userId }, { isVerified: true });
+      await this.firebaseService.setEmailVerifed(dbUser.uid);
     } catch (error) {
       this.logger.error(error);
       throw new BadRequestException(error);

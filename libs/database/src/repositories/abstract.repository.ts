@@ -39,10 +39,10 @@ export abstract class AbstractRepository<T extends AbstractEntity> {
     }
   }
 
-  async findOne(filterQuery: FilterQuery<T>): Promise<T> {
+  async findOne(filterQuery: FilterQuery<T>, returnedNull: boolean = false): Promise<T> {
     const document = await this.model.findOne(filterQuery).lean<T>();
 
-    if (!document) {
+    if (!document && !returnedNull) {
       this.logger.warn("Document was not found with filterQuery", filterQuery);
       throw new NotFoundException("Document not found");
     }
